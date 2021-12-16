@@ -96,6 +96,8 @@ public final class ServerImplBuilder extends ServerBuilder<ServerImplBuilder> {
   CallTracer.Factory callTracerFactory = CallTracer.getDefaultFactory();
   @Nullable
   ServerCallExecutorSupplier executorSupplier;
+  @Nullable
+  ServerTransportListener customServerTransportListener;
 
   /**
    * An interface to provide to provide transport specific information for the server. This method
@@ -122,6 +124,11 @@ public final class ServerImplBuilder extends ServerBuilder<ServerImplBuilder> {
   @Override
   public ServerImplBuilder executor(@Nullable Executor executor) {
     this.executorPool = executor != null ? new FixedObjectPool<>(executor) : DEFAULT_EXECUTOR_POOL;
+    return this;
+  }
+
+  public ServerImplBuilder customListener(ServerTransportListener customServerTransportListener) {
+    this.customServerTransportListener = customServerTransportListener;
     return this;
   }
 

@@ -19,6 +19,7 @@ package io.grpc.netty;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.TimeUnit;
 
+// todo this
 /**
  * A command to trigger close and allow streams naturally close.
  */

@@ -21,6 +21,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import io.grpc.Status;
 
+// cancel
 /**
  * Command sent from a Netty server stream to the handler to cancel the stream.
  */

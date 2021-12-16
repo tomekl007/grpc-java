@@ -151,7 +151,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
     final SettableFuture<Void> serverShutdownCalled = SettableFuture.create();
     ns.start(new ServerListener() {
       @Override
@@ -201,7 +201,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
     final SettableFuture<Void> shutdownCompleted = SettableFuture.create();
     ns.start(new ServerListener() {
       @Override
@@ -274,7 +274,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
     final SettableFuture<Void> shutdownCompleted = SettableFuture.create();
     ns.start(new ServerListener() {
       @Override
@@ -335,7 +335,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
 
     assertThat(ns.getListenSocketAddress()).isEqualTo(addr);
     assertThat(ns.getListenSocketAddresses()).isEqualTo(addresses);
@@ -409,7 +409,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         eagAttributes,
-        channelz);
+        channelz, null);
     ns.start(new ServerListener() {
       @Override
       public ServerTransportListener transportCreated(ServerTransport transport) {
@@ -456,7 +456,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
     final SettableFuture<Void> shutdownCompleted = SettableFuture.create();
     ns.start(new ServerListener() {
       @Override
@@ -598,7 +598,7 @@ public class NettyServerTest {
         1, 1, // ignore
         true, 0, // ignore
         Attributes.EMPTY,
-        channelz);
+        channelz, null);
   }
 
   private static class NoopServerTransportListener implements ServerTransportListener {

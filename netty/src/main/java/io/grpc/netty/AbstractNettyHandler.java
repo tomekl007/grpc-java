@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  * Base class for all Netty gRPC handlers. This class standardizes exception handling (always
  * shutdown the connection) as well as sending the initial connection window at startup.
  */
+// todo
 abstract class AbstractNettyHandler extends GrpcHttp2ConnectionHandler {
   private static final long GRACEFUL_SHUTDOWN_NO_TIMEOUT = -1;
 
@@ -82,6 +83,14 @@ abstract class AbstractNettyHandler extends GrpcHttp2ConnectionHandler {
   public void channelActive(ChannelHandlerContext ctx) throws Exception {
     // Sends connection preface if we haven't already.
     super.channelActive(ctx);
+
+    // todo?
+    //    closeChannelHook.newChannel(ctx.channel(), );
+    //    this.getAuthority()
+    //    connection().connectionStream().
+
+
+
     sendInitialConnectionWindow();
   }
 

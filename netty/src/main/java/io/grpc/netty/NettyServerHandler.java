@@ -124,6 +124,7 @@ class NettyServerHandler extends AbstractNettyHandler {
   private final TransportTracer transportTracer;
   private final KeepAliveEnforcer keepAliveEnforcer;
   private final Attributes eagAttributes;
+  private final ServerTransportListener customListener;
   /** Incomplete attributes produced by negotiator. */
   private Attributes negotiationAttributes;
   private InternalChannelz.Security securityInfo;
@@ -142,6 +143,7 @@ class NettyServerHandler extends AbstractNettyHandler {
   @CheckForNull
   private GracefulShutdown gracefulShutdown;
 
+  // todo here
   static NettyServerHandler newHandler(
       ServerTransportListener transportListener,
       ChannelPromise channelUnused,
@@ -159,7 +161,8 @@ class NettyServerHandler extends AbstractNettyHandler {
       long maxConnectionAgeGraceInNanos,
       boolean permitKeepAliveWithoutCalls,
       long permitKeepAliveTimeInNanos,
-      Attributes eagAttributes) {
+      Attributes eagAttributes,
+      ServerTransportListener customListener) {
     Preconditions.checkArgument(maxHeaderListSize > 0, "maxHeaderListSize must be positive: %s",
         maxHeaderListSize);
     Http2FrameLogger frameLogger = new Http2FrameLogger(LogLevel.DEBUG, NettyServerHandler.class);
@@ -187,7 +190,8 @@ class NettyServerHandler extends AbstractNettyHandler {
         maxConnectionAgeGraceInNanos,
         permitKeepAliveWithoutCalls,
         permitKeepAliveTimeInNanos,
-        eagAttributes);
+        eagAttributes,
+        customListener);
   }
 
   static NettyServerHandler newHandler(
@@ -209,7 +213,8 @@ class NettyServerHandler extends AbstractNettyHandler {
       long maxConnectionAgeGraceInNanos,
       boolean permitKeepAliveWithoutCalls,
       long permitKeepAliveTimeInNanos,
-      Attributes eagAttributes) {
+      Attributes eagAttributes,
+      ServerTransportListener customListener) {
     Preconditions.checkArgument(maxStreams > 0, "maxStreams must be positive: %s", maxStreams);
     Preconditions.checkArgument(flowControlWindow > 0, "flowControlWindow must be positive: %s",
         flowControlWindow);
@@ -255,7 +260,8 @@ class NettyServerHandler extends AbstractNettyHandler {
         maxConnectionAgeInNanos, maxConnectionAgeGraceInNanos,
         keepAliveEnforcer,
         autoFlowControl,
-        eagAttributes);
+        eagAttributes,
+        customListener);
   }
 
   private NettyServerHandler(
@@ -275,7 +281,8 @@ class NettyServerHandler extends AbstractNettyHandler {
       long maxConnectionAgeGraceInNanos,
       final KeepAliveEnforcer keepAliveEnforcer,
       boolean autoFlowControl,
-      Attributes eagAttributes) {
+      Attributes eagAttributes,
+      ServerTransportListener customListener) {
     super(channelUnused, decoder, encoder, settings, new ServerChannelLogger(),
         autoFlowControl, null);
 
@@ -331,6 +338,7 @@ class NettyServerHandler extends AbstractNettyHandler {
     this.transportListener = checkNotNull(transportListener, "transportListener");
     this.streamTracerFactories = checkNotNull(streamTracerFactories, "streamTracerFactories");
     this.transportTracer = checkNotNull(transportTracer, "transportTracer");
+    this.customListener = customListener;
 
     // Set the frame listener on the decoder.
     decoder().frameListener(new FrameListener());
@@ -474,6 +482,12 @@ class NettyServerHandler extends AbstractNettyHandler {
             statsTraceCtx,
             transportTracer);
         transportListener.streamCreated(stream, method, metadata);
+        System.out.println("Calling customListener: " + customListener);
+        if (customListener != null) {
+          System.out.println("NettyServerHandler# Stream created for stream: "
+                  + stream + " methodName: " + method + " headers: " + headers);
+          customListener.streamCreated(stream, method, metadata);
+        }
         state.onStreamAllocated();
         http2Stream.setProperty(streamKey, state);
       } finally {
@@ -741,6 +755,8 @@ class NettyServerHandler extends AbstractNettyHandler {
     }
   }
 
+
+  // here
   private void gracefulClose(final ChannelHandlerContext ctx, final GracefulServerCloseCommand msg,
       ChannelPromise promise) throws Exception {
     // Ideally we'd adjust a pre-existing graceful shutdown's grace period to at least what is
@@ -872,6 +888,7 @@ class NettyServerHandler extends AbstractNettyHandler {
       }
       if (!keepAliveEnforcer.pingAcceptable()) {
         ByteBuf debugData = ByteBufUtil.writeAscii(ctx.alloc(), "too_many_pings");
+        // todo goAway?
         goAway(ctx, connection().remote().lastStreamCreated(), Http2Error.ENHANCE_YOUR_CALM.code(),
             debugData, ctx.newPromise());
         Status status = Status.RESOURCE_EXHAUSTED.withDescription("Too many pings from client");
