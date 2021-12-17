@@ -84,6 +84,7 @@ class NettyServer implements InternalServer, InternalWithLogId {
   private final ObjectPool<? extends EventLoopGroup> bossGroupPool;
   private final ObjectPool<? extends EventLoopGroup> workerGroupPool;
   private final boolean forceHeapBuffer;
+  private final ServerTransportListener customListener;
   private EventLoopGroup bossGroup;
   private EventLoopGroup workerGroup;
   private ServerListener listener;
@@ -127,7 +128,7 @@ class NettyServer implements InternalServer, InternalWithLogId {
       long maxConnectionIdleInNanos,
       long maxConnectionAgeInNanos, long maxConnectionAgeGraceInNanos,
       boolean permitKeepAliveWithoutCalls, long permitKeepAliveTimeInNanos,
-      Attributes eagAttributes, InternalChannelz channelz) {
+      Attributes eagAttributes, InternalChannelz channelz, ServerTransportListener customListener) {
     this.addresses = checkNotNull(addresses, "addresses");
     this.channelFactory = checkNotNull(channelFactory, "channelFactory");
     checkNotNull(channelOptions, "channelOptions");
@@ -160,6 +161,7 @@ class NettyServer implements InternalServer, InternalWithLogId {
     this.channelz = Preconditions.checkNotNull(channelz);
     this.logId = InternalLogId.allocate(getClass(), addresses.isEmpty() ? "No address" :
         String.valueOf(addresses));
+    this.customListener = customListener;
   }
 
   @Override
@@ -238,6 +240,7 @@ class NettyServer implements InternalServer, InternalWithLogId {
               (long) ((.9D + Math.random() * .2D) * maxConnectionAgeInNanos);
         }
 
+        // here
         NettyServerTransport transport =
             new NettyServerTransport(
                 ch,
@@ -287,7 +290,7 @@ class NettyServer implements InternalServer, InternalWithLogId {
           }
         }
 
-        transport.start(transportListener);
+        transport.start(transportListener, customListener);
         ChannelFutureListener loopReleaser = new LoopReleaser();
         channelDone.addListener(loopReleaser);
         ch.closeFuture().addListener(loopReleaser);

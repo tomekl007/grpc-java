@@ -235,6 +235,10 @@ class NettyServerStream extends AbstractServerStream {
     public Tag tag() {
       return tag;
     }
+
+    public Http2Stream getHttp2Stream() {
+      return http2Stream;
+    }
   }
 
   @Override

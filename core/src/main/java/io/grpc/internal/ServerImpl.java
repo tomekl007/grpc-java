@@ -95,6 +95,7 @@ public final class ServerImpl extends io.grpc.Server implements InternalInstrume
 
   private final InternalLogId logId;
   private final ObjectPool<? extends Executor> executorPool;
+  private final ServerTransportListener customServerTransportListener;
   /** Executor for application processing. Safe to read after {@link #start()}. */
   private Executor executor;
   private final HandlerRegistry registry;
@@ -163,6 +164,7 @@ public final class ServerImpl extends io.grpc.Server implements InternalInstrume
     this.ticker = checkNotNull(builder.ticker, "ticker");
     channelz.addServer(this);
     this.executorSupplier = builder.executorSupplier;
+    this.customServerTransportListener = builder.customServerTransportListener;
   }
 
   /**
@@ -462,6 +464,11 @@ public final class ServerImpl extends io.grpc.Server implements InternalInstrume
       Tag tag = PerfMark.createTag(methodName, stream.streamId());
       PerfMark.startTask("ServerTransportListener.streamCreated", tag);
       try {
+        if (customServerTransportListener != null) {
+          System.out.println("ServerImpl# Stream created for stream: "
+                  + stream + " methodName: " + methodName + " headers: " + headers);
+          customServerTransportListener.streamCreated(stream, methodName, headers);
+        }
         streamCreatedInternal(stream, methodName, headers, tag);
       } finally {
         PerfMark.stopTask("ServerTransportListener.streamCreated", tag);

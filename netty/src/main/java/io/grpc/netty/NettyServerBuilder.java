@@ -40,6 +40,7 @@ import io.grpc.internal.KeepAliveManager;
 import io.grpc.internal.ObjectPool;
 import io.grpc.internal.ServerImplBuilder;
 import io.grpc.internal.ServerImplBuilder.ClientTransportServersBuilder;
+import io.grpc.internal.ServerTransportListener;
 import io.grpc.internal.SharedResourcePool;
 import io.grpc.internal.TransportTracer;
 import io.netty.channel.ChannelFactory;
@@ -113,6 +114,7 @@ public final class NettyServerBuilder extends AbstractServerImplBuilder<NettySer
   private boolean permitKeepAliveWithoutCalls;
   private long permitKeepAliveTimeInNanos = TimeUnit.MINUTES.toNanos(5);
   private Attributes eagAttributes = Attributes.EMPTY;
+  private ServerTransportListener customListener;
 
   /**
    * Creates a server builder that will bind to the given port.
@@ -637,7 +639,7 @@ public final class NettyServerBuilder extends AbstractServerImplBuilder<NettySer
         keepAliveTimeInNanos, keepAliveTimeoutInNanos,
         maxConnectionIdleInNanos, maxConnectionAgeInNanos,
         maxConnectionAgeGraceInNanos, permitKeepAliveWithoutCalls, permitKeepAliveTimeInNanos,
-        eagAttributes, this.serverImplBuilder.getChannelz());
+        eagAttributes, this.serverImplBuilder.getChannelz(), customListener);
   }
 
   @VisibleForTesting
@@ -687,6 +689,11 @@ public final class NettyServerBuilder extends AbstractServerImplBuilder<NettySer
       throw new RuntimeException(e);
     }
     protocolNegotiatorFactory = ProtocolNegotiators.serverTlsFactory(sslContext);
+    return this;
+  }
+
+  public NettyServerBuilder customListener(ServerTransportListener customServerTransportListener) {
+    customListener = customServerTransportListener;
     return this;
   }
 }

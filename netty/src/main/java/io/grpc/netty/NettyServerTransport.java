@@ -80,6 +80,7 @@ class NettyServerTransport implements ServerTransport {
   private final Attributes eagAttributes;
   private final List<? extends ServerStreamTracer.Factory> streamTracerFactories;
   private final TransportTracer transportTracer;
+  private ServerTransportListener customListener;
 
   NettyServerTransport(
       Channel channel,
@@ -123,12 +124,14 @@ class NettyServerTransport implements ServerTransport {
     this.logId = InternalLogId.allocate(getClass(), remote != null ? remote.toString() : null);
   }
 
-  public void start(ServerTransportListener listener) {
+  // todo here
+  public void start(ServerTransportListener listener, ServerTransportListener customListener) {
     Preconditions.checkState(this.listener == null, "Handler already registered");
     this.listener = listener;
+    this.customListener = customListener;
 
     // Create the Netty handler for the pipeline.
-    grpcHandler = createHandler(listener, channelUnused);
+    grpcHandler = createHandler(listener, channelUnused, customListener);
 
     // Notify when the channel closes.
     final class TerminationNotifier implements ChannelFutureListener {
@@ -139,6 +142,8 @@ class NettyServerTransport implements ServerTransport {
         if (!done) {
           done = true;
           notifyTerminated(grpcHandler.connectionError());
+
+          // maybe here add a custom hook?
         }
       }
     }
@@ -259,7 +264,8 @@ class NettyServerTransport implements ServerTransport {
    * Creates the Netty handler to be used in the channel pipeline.
    */
   private NettyServerHandler createHandler(
-      ServerTransportListener transportListener, ChannelPromise channelUnused) {
+          ServerTransportListener transportListener, ChannelPromise channelUnused,
+          ServerTransportListener customListener) {
     return NettyServerHandler.newHandler(
         transportListener,
         channelUnused,
@@ -277,6 +283,7 @@ class NettyServerTransport implements ServerTransport {
         maxConnectionAgeGraceInNanos,
         permitKeepAliveWithoutCalls,
         permitKeepAliveTimeInNanos,
-        eagAttributes);
+        eagAttributes,
+        customListener);
   }
 }
