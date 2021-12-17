@@ -305,6 +305,8 @@ class NettyServerHandler extends AbstractNettyHandler {
     connection.addListener(new Http2ConnectionAdapter() {
       @Override
       public void onStreamActive(Http2Stream stream) {
+        // todo maybe this callback is better?
+        System.out.println("On stream active: " + stream);
         if (connection.numActiveStreams() == 1) {
           keepAliveEnforcer.onTransportActive();
           if (maxConnectionIdleManager != null) {
@@ -315,6 +317,8 @@ class NettyServerHandler extends AbstractNettyHandler {
 
       @Override
       public void onStreamClosed(Http2Stream stream) {
+        // todo maybe this callback is better? We can remove streams using this callback
+        System.out.println("On stream closed: " + stream);
         if (connection.numActiveStreams() == 0) {
           keepAliveEnforcer.onTransportIdle();
           if (maxConnectionIdleManager != null) {
